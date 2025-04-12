@@ -29,6 +29,10 @@ let messages = {
     history: [],
 }
 
+function formatText(text) {
+  return text.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+}
+
 async function sendMessage() {
 
     console.log(messages);
