@@ -20,7 +20,7 @@ Example: "Thank you for reaching out! Please let us know if you need further ass
 
 `;
 
-const API_KEY = "AIzaSyDU-ED5T8sVj0XbpN2y06X3TGoM9SygMfM";
+const API_KEY = "Removed_Temporarily";
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ 
     model: "gemini-1.5-pro",
@@ -32,18 +32,18 @@ let messages = {
 }
 
 function formatText(text) {
-  return text.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+  return text
+    .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br/>');
 }
 
 async function sendMessage() {
-
-    console.log(messages);
-    const userMessage = document.querySelector(".chat-window input").value;
+    const textarea = document.querySelector(".chat-window textarea");
+    const userMessage = textarea.value.trim();
     
     if (userMessage.length) {
-
         try {
-            document.querySelector(".chat-window input").value = "";
+            textarea.value = "  ";
             document.querySelector(".chat-window .chat").insertAdjacentHTML("beforeend",`
                 <div class="user">
                     <p>${userMessage}</p>
@@ -55,7 +55,6 @@ async function sendMessage() {
             `);
 
             const chat = model.startChat(messages);
-
             let result = await chat.sendMessageStream(userMessage);
             
             document.querySelector(".chat-window .chat").insertAdjacentHTML("beforeend",`
@@ -65,13 +64,11 @@ async function sendMessage() {
             `);
             
             let modelMessages = '';
-
             for await (const chunk of result.stream) {
               const chunkText = chunk.text();
+              const formatted = formatText(chunkText);
               modelMessages = document.querySelectorAll(".chat-window .chat div.model");
-              modelMessages[modelMessages.length - 1].querySelector("p").insertAdjacentHTML("beforeend",`
-                ${chunkText}
-            `);
+              modelMessages[modelMessages.length - 1].querySelector("p").insertAdjacentHTML("beforeend", formatted);
             }
 
             messages.history.push({
@@ -93,20 +90,16 @@ async function sendMessage() {
         }
 
         document.querySelector(".chat-window .chat .loader").remove();
-        
     }
 }
 
 document.querySelector(".chat-window .input-area button")
-.addEventListener("click", ()=>sendMessage());
+.addEventListener("click", sendMessage);
 
-document.querySelector(".chat-button")
-.addEventListener("click", ()=>{
-    document.querySelector("body").classList.add("chat-open");
+document.querySelector(".chat-window textarea")
+.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
 });
-
-document.querySelector(".chat-window button.close")
-.addEventListener("click", ()=>{
-    document.querySelector("body").classList.remove("chat-open");
-});
-
